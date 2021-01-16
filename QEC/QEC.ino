@@ -13,17 +13,15 @@ int turn_idx_prev = -1;
 float t_start = millis(); 
 
 //straightaway running times
-float t[] = {0,0,0,0};
+float t[] = {0,0,0,0,0};
 
 //parameters to calibrate for proper turning and movement
 int Lf = 3000;
-int Rf = 1865;
-int Lb = 1000;
-int Rb = 2130;
+int Rf = 1750;
+int Lb = 1750;
+int Rb = 2250;
 int off = 2000;
-int turn_delay = 0;
-int final_delay = 0;
-int stop_delay = 0;
+int turn_delay = 430;
 
 float sense(){
   //send pulse out
@@ -40,16 +38,19 @@ void Turn(){
   //order of operations for turning
   switch(turn_idx){
     case 0:
-      Right();
+      Left();
       break;
     case 1:
-      Left();
+      Right();
       break;
     case 2:
-      Left();
+      Right();
       break;
     case 3:
-      Right();
+      Left();
+      break;
+    case 4:
+      Stop();
       route_idx = 1;
       break;
   }
@@ -89,6 +90,9 @@ void setup() {
   //initialize and select ultrasound sensor pins
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT); 
+  pinMode(0,INPUT);
+  pinMode(A5,OUTPUT);
+  analogWrite(A5,HIGH);
   t_start = millis(); 
 }
 
@@ -115,31 +119,24 @@ void loop() {
       turn_idx = turn_idx + 1;
     }
   }
-  //small movement forwards and back at the end
-  else if(route_idx == 1){
-    Fwd();
-    delay(final_delay);
-    Stop();
-    Bck();
-    delay(final_delay);
-    Stop();
-    route_idx = 2;
-  }
   //repeat all initial movements except backwards
-  else if(route_idx == 2){
-    Left();
+  else if(route_idx == 1){
+    Bck();
+    delay(t[4]);
+    Stop();
+    Right();
     Bck();
     delay(t[3]);
     Stop();
-    Right();
+    Left();
     Bck();
     delay(t[2]);
     Stop();
-    Right();
+    Left();
     Bck();
     delay(t[1]);
     Stop();
-    Left();
+    Right();
     Bck();
     delay(t[0]);
     Stop();
@@ -149,7 +146,7 @@ void loop() {
     delay(10);
   }
   //stop button for troubleshooting
-  if(digitalRead(1) == LOW){
+  if(digitalRead(0) == LOW){
     Stop();
     route_idx = 0;
     turn_idx = 0;
