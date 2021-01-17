@@ -8,8 +8,8 @@ Servo servoR;
 
 //turn and timer indexing
 int route_idx = 0;
-int turn_idx = 0;
-int turn_idx_prev = -1;
+int turn_idx = -1;
+int turn_idx_prev = -2;
 float t_start = millis(); 
 
 //straightaway running times
@@ -68,7 +68,8 @@ void Bck(){
 void Stop(){
   //both servos off
   servoL.writeMicroseconds(off);
-  servoR.writeMicroseconds(off);}
+  servoR.writeMicroseconds(off);
+  delay(200);}
 void Left(){
   //left backwards, right forwards
   servoL.writeMicroseconds(Lb);
@@ -90,9 +91,6 @@ void setup() {
   //initialize and select ultrasound sensor pins
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT); 
-  pinMode(0,INPUT);
-  pinMode(A5,OUTPUT);
-  analogWrite(A5,HIGH);
   t_start = millis(); 
 }
 
@@ -102,21 +100,19 @@ void loop() {
     //check whether to start timer for straightaway
     if(turn_idx != turn_idx_prev){
       t_start = millis();
+      turn_idx_prev = turn_idx;
     }
     //move forwards
     Fwd();
     //check ultrasound for obstacle
-    if(sense() < 20){
-      //move forwards and stop
-      delay(stop_delay);
+    if(sense() < 5){
+      turn_idx = turn_idx + 1;
       //save straightaway time
       t[turn_idx] = millis() - t_start;
       Stop();
       //call function to institute turning order given
       Turn();
       //increase route indicies
-      turn_idx_prev = turn_idx;
-      turn_idx = turn_idx + 1;
     }
   }
   //repeat all initial movements except backwards
@@ -142,14 +138,5 @@ void loop() {
     Stop();
   }
   //delay while waiting for straightaway
-  else{
-    delay(10);
-  }
-  //stop button for troubleshooting
-  if(digitalRead(0) == LOW){
-    Stop();
-    route_idx = 0;
-    turn_idx = 0;
-    turn_idx_prev = -1;
-  }
+  delay(10);
 }
